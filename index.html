@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>물을 전기 분해 하기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&family=Noto+Serif+KR:wght@600;700&family=STIX+Two+Text:ital@1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --mint:#5dc2b0; --mint-deep:#23907f; --mint-soft:#e3f5f1;
+  --yellow:#f4c33b; --salmon:#e9966b; --num:#e8843a;
+  --ink:#231f20; --muted:#646b6c; --line:#d9dddc;
+  --paper:#fff; --panel:#f5f8f7; --stage:#fcfdfd;
+  --gray-tag:#98a2a2; --danger:#e0463a;
+  --table:#eef2f1; --table-edge:#cfd6d5;
+  --glass:rgba(210,230,235,.45); --glass-line:#8fa6ac; --shelf:#d8cbb6;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --mint-soft:#1d3a35; --ink:#eef2f1; --muted:#a3adac; --line:#39433f;
+    --paper:#141918; --panel:#1c2423; --stage:#18201f;
+    --table:#222c2b; --table-edge:#3a4645;
+    --glass:rgba(160,200,210,.16); --glass-line:#7d98a0; --shelf:#5a4f40;
+  }
+}
+:root[data-theme="dark"]{
+  --mint-soft:#1d3a35; --ink:#eef2f1; --muted:#a3adac; --line:#39433f;
+  --paper:#141918; --panel:#1c2423; --stage:#18201f;
+  --table:#222c2b; --table-edge:#3a4645;
+  --glass:rgba(160,200,210,.16); --glass-line:#7d98a0; --shelf:#5a4f40;
+}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0}
+body{background:var(--paper);color:var(--ink);font-family:'Noto Sans KR',system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+
+.app{height:100%;max-width:1600px;margin:0 auto;padding:12px 20px 16px;display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px}
+
+/* 상단 배지 + 진행 바 */
+.top{display:flex;align-items:center}
+.badge{border-radius:50%;display:grid;place-items:center;font-weight:800;flex:none}
+.b1{width:74px;height:74px;background:var(--mint);color:#fff;font-size:17px;position:relative;z-index:1}
+.b2{width:56px;height:56px;background:var(--yellow);color:#3b2f06;font-size:15px;margin-left:-10px}
+.dots{width:56px;border-top:3px dotted #b3bbba;margin:0 10px 0 12px}
+.bar{flex:1;height:8px;border-radius:8px;background:#d3d8d7;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:8px;background:var(--mint);transition:width .5s}
+.bar b{position:absolute;top:50%;left:0;width:14px;height:14px;border-radius:50%;background:var(--mint);transform:translate(-50%,-50%);transition:left .5s}
+.tail{width:130px;height:8px;border-radius:8px;background:var(--mint);margin-left:10px}
+
+.body{display:grid;grid-template-columns:230px minmax(0,1fr);gap:20px;min-height:0}
+
+/* 왼쪽 사이드 */
+aside{border-left:6px solid var(--mint-soft);padding:6px 0 0 14px;overflow:auto}
+aside h3{font-size:16px;margin:0 0 8px;font-weight:800}
+.items{list-style:none;margin:0 0 18px;padding:0}
+.items li{display:flex;gap:8px;align-items:flex-start;font-size:15px;line-height:1.45;padding:3px 0}
+.box{width:17px;height:17px;border:1.6px solid var(--muted);border-radius:3px;flex:none;margin-top:3px;display:grid;place-items:center;transition:.25s}
+.box svg{width:11px;height:11px;opacity:0}
+.items li.on .box{background:var(--mint);border-color:var(--mint)}
+.items li.on .box svg{opacity:1}
+.items li.on{color:var(--mint-deep)}
+.ch i{font-family:'STIX Two Text',serif;font-style:italic}
+.ch sub{font-size:.7em}
+.caution{margin-bottom:14px}
+.caution .warn{width:22px;height:22px;display:block;margin-bottom:6px}
+.caution ul{margin:0;padding:0;list-style:none}
+.caution li{position:relative;padding-left:12px;font-size:14px;line-height:1.5;margin-bottom:4px;color:var(--ink)}
+.caution li::before{content:'';position:absolute;left:1px;top:.62em;width:4px;height:4px;border-radius:50%;background:var(--muted)}
+.gears{display:flex;flex-wrap:wrap;gap:6px}
+.gear,.sign{width:48px;height:48px;border-radius:50%;border:2px solid #7ea6c4;background:var(--paper);display:grid;place-items:center;padding:0;color:#4d7ea5;flex:none}
+.gear{cursor:pointer;transition:background .25s,border-color .25s,color .25s}
+.gear svg,.sign svg{width:30px;height:30px}
+.gear svg *{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round;transition:fill .25s}
+.gear.on{background:var(--mint-soft);border-color:var(--mint);color:var(--mint-deep)}
+.gear.on svg .f{fill:var(--mint);fill-opacity:.45}
+.sign.pulse{animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 7px rgba(244,195,59,.45)}}
+
+/* 가운데 */
+.main{display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:10px;min-height:0}
+.title h1{font-size:26px;font-weight:800;margin:2px 0 6px;letter-spacing:-.01em}
+.goal{margin:0;font-family:'Noto Serif KR',serif;font-weight:600;font-size:16px;line-height:1.6}
+.goal b{font-family:'Noto Sans KR',sans-serif;font-weight:800;margin-right:10px}
+
+.stage{position:relative;background:var(--stage);border:1px solid var(--line);border-radius:22px;overflow:hidden;min-height:260px}
+#scene{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+.tools{position:absolute;top:12px;right:12px;display:flex;gap:8px;z-index:3}
+.reset{position:absolute;left:12px;bottom:12px;z-index:3}
+.btn{min-height:48px;padding:0 20px;border-radius:999px;border:1.5px solid var(--line);background:var(--paper);font-weight:700;font-size:15px;cursor:pointer;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn.on{background:var(--mint-soft);border-color:var(--mint);color:var(--mint-deep)}
+.toast{position:absolute;top:14px;left:50%;transform:translate(-50%,-14px);opacity:0;background:var(--ink);color:var(--paper);padding:11px 20px;border-radius:999px;font-weight:600;font-size:15px;transition:opacity .3s,transform .3s;pointer-events:none;z-index:4;max-width:62%;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+.sheet{position:absolute;left:16px;right:16px;bottom:0;z-index:5;background:var(--paper);border:1px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.12);padding:18px 26px 22px;max-height:84%;overflow:auto;transform:translateY(105%);transition:transform .45s cubic-bezier(.3,.8,.3,1)}
+.sheet.open{transform:none}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.qs{list-style:none;margin:0;padding:0}
+.qs li{display:flex;gap:12px;padding:12px 0 16px;border-bottom:1.5px dashed var(--line)}
+.qn{color:var(--mint-deep);font-weight:800;font-size:20px;line-height:1.4;flex:none}
+.qs p{margin:0;font-family:'Noto Serif KR',serif;font-weight:600;font-size:19px;line-height:1.55}
+.note{margin:14px 0 0;color:var(--muted);font-size:15px}
+
+.panel{background:var(--panel);border-radius:20px;padding:14px 20px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:16px;align-items:center}
+.ptop{display:flex;align-items:center;gap:10px}
+.tag{display:inline-flex;align-items:center;height:28px;padding:0 14px;border-radius:999px;background:var(--salmon);color:#fff;font-weight:700;font-size:14px}
+.tag.prep{background:var(--gray-tag)}
+.tag.result{background:var(--mint)}
+.count{color:var(--muted);font-weight:600;font-size:14px}
+.next{grid-column:2;grid-row:1 / span 3;background:var(--paper)}
+.next.ready{background:var(--mint);border-color:var(--mint);color:#fff;animation:blink .42s ease-in-out 2}
+@keyframes blink{50%{transform:scale(1.06);box-shadow:0 0 0 8px rgba(93,194,176,.3)}}
+.stepline{display:flex;gap:12px;align-items:baseline;margin-top:6px}
+.stepnum{color:var(--num);font-weight:800;font-size:28px;line-height:1;min-width:24px}
+.steptext{margin:0;font-family:'Noto Serif KR',serif;font-weight:600;font-size:22px;line-height:1.5}
+.hint{margin:4px 0 0 36px;color:var(--muted);font-size:15px;line-height:1.5}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.66em;line-height:1.05;margin:0 .12em}
+.frac span:first-child{border-bottom:1.5px solid currentColor;padding:0 .2em}
+
+/* SVG 오브젝트 */
+.obj{transition:transform .5s cubic-bezier(.3,.8,.3,1),opacity .35s}
+.obj.dragging{transition:transform .1s linear,opacity .35s}
+.obj.fixed{transition:opacity .35s}
+[data-drag].can{cursor:grab}
+.obj.dragging{cursor:grabbing}
+[data-tap].can{cursor:pointer}
+.cutoff{opacity:0;transform:translate(0px,34px);transition:transform .5s,opacity .5s}
+.ring{fill:none;stroke:var(--mint-deep);stroke-width:2.5;stroke-dasharray:4 3;animation:ring 1.1s ease-in-out infinite}
+@keyframes ring{50%{opacity:.25}}
+.sv-label{font-family:'Noto Sans KR',sans-serif}
+
+@media (max-width:900px),(orientation:portrait){
+  .app{height:auto;min-height:100%}
+  .body{grid-template-columns:1fr}
+  aside{border-left:0;padding:0}
+  .items{display:flex;flex-wrap:wrap;gap:2px 16px;margin-bottom:10px}
+  .caution{display:none}
+  .stage{aspect-ratio:5/3;min-height:0}
+  .steptext{font-size:19px}
+  .tail,.dots{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <span class="badge b1">해 보기</span><span class="badge b2">실험</span>
+    <span class="dots"></span>
+    <div class="bar" aria-hidden="true"><i id="barFill"></i><b id="barDot"></b></div>
+    <span class="tail"></span>
+  </header>
+
+  <div class="body">
+    <aside>
+      <h3>준비물</h3>
+      <ul class="items" id="items">
+        <li data-item="reagent"><span class="box"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.5L10 3" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span><span>황산 나트륨 수용액<br><span class="ch">(Na<sub>2</sub>SO<sub>4</sub>(<i>aq</i>))</span></span></li>
+        <li data-item="btb"><span class="box"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.5L10 3" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span><span>BTB 용액</span></li>
+        <li data-item="pipette"><span class="box"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.5L10 3" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span><span>일회용 스포이트</span></li>
+        <li data-item="wire"><span class="box"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.5L10 3" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span><span>집게 달린 전선</span></li>
+        <li data-item="battery"><span class="box"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.5L10 3" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span><span>9 V 건전지</span></li>
+        <li data-item="plate"><span class="box"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.5L10 3" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span><span>홈판</span></li>
+        <li data-item="bottle"><span class="box"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.5L10 3" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span><span>플라스틱 병</span></li>
+        <li data-item="pin"><span class="box"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.5L10 3" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span><span>침핀</span></li>
+        <li data-item="scissors"><span class="box"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.5L10 3" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></span><span>가위</span></li>
+      </ul>
+
+      <div class="caution">
+        <svg class="warn" viewBox="0 0 24 24" aria-label="주의"><path d="M12 2.5 L22.5 21 H1.5 Z" fill="none" stroke="#e0463a" stroke-width="2.2" stroke-linejoin="round"/><path d="M12 9v6" stroke="#e0463a" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="18" r="1.4" fill="#e0463a"/></svg>
+        <ul>
+          <li>실험복, 보안경, 실험용 장갑을 착용한다.</li>
+          <li>황산 나트륨 수용액이 피부에 묻지 않도록 주의한다.</li>
+          <li>실험 후 남은 용액은 폐수처리 기준과 방법에 따라 처리한다.</li>
+        </ul>
+      </div>
+
+      <div class="gears">
+        <button class="gear" data-gear="coat" aria-label="실험복 착용" title="실험복"><svg viewBox="0 0 32 32"><path class="f" d="M12 5h8l6 4-1.5 15H21v4h-10v-4H7.5L6 9z"/><path d="M16 5v23M12 5l4 6 4-6"/></svg></button>
+        <button class="gear" data-gear="goggles" aria-label="보안경 착용" title="보안경"><svg viewBox="0 0 32 32"><path class="f" d="M5 13.5c0-2 1.6-3.5 3.6-3.5h14.8c2 0 3.6 1.5 3.6 3.5v3.5c0 2.3-1.8 4-4 4h-3.2l-2.2-2.4h-3.2L12.2 21H9c-2.2 0-4-1.7-4-4z"/><path d="M5 14H2.5M27 14h2.5"/></svg></button>
+        <button class="gear" data-gear="gloves" aria-label="실험용 장갑 착용" title="실험용 장갑"><svg viewBox="0 0 32 32"><path class="f" d="M11.5 28v-7.5L8 15.8c-.9-1.3.6-2.8 1.9-1.8l2.3 2V7.3c0-1.5 2.3-1.5 2.3 0V14V5.8c0-1.5 2.3-1.5 2.3 0V14V6.8c0-1.5 2.3-1.5 2.3 0V14V9c0-1.5 2.2-1.5 2.2 0v10.5c0 4-1.8 6.5-3.8 8.5z"/></svg></button>
+        <span class="sign" id="signElec" title="전기 주의" role="img" aria-label="전기 주의"><svg viewBox="0 0 32 32"><path d="M16 4 L29 27 H3 Z" fill="#f4c33b" stroke="#231f20" stroke-width="1.6" stroke-linejoin="round"/><path d="M17.5 11 L12.5 19.5 H16 L14.5 25 L20 16.5 H16.5 Z" fill="#231f20"/></svg></span>
+        <span class="sign" id="signWaste" title="폐수 처리" role="img" aria-label="폐수 처리"><svg viewBox="0 0 32 32"><g fill="none" stroke="#4d7ea5" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M10 10h12l-1.3 17h-9.4z"/><path d="M8 10h16M13.5 10V7h5v3"/><path d="M16 14.5c-1.9 2.7-2.8 4-2.8 5.4a2.8 2.8 0 0 0 5.6 0c0-1.4-.9-2.7-2.8-5.4z"/></g></svg></span>
+      </div>
+    </aside>
+
+    <section class="main">
+      <div class="title">
+        <h1>물을 전기 분해 하기</h1>
+        <p class="goal"><b>목표</b>물에 전기 에너지를 가했을 때 발생하는 현상을 설명할 수 있다.</p>
+      </div>
+
+      <div class="stage" id="stage">
+        <svg id="scene" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet" aria-label="실험대">
+          <rect x="-1500" y="515" width="4000" height="800" fill="var(--table)"/>
+          <line x1="-1500" x2="2500" y1="515" y2="515" stroke="var(--table-edge)" stroke-width="2"/>
+          <g id="Lback"></g>
+          <g id="Lbottle"></g>
+          <g id="Lpip"></g>
+          <g id="Lplate"></g>
+          <g id="Lfront"></g>
+          <g id="Lreagent"></g>
+          <g id="Lwire"></g>
+          <g id="Llabel"></g>
+          <g id="Lshelf"></g>
+          <g id="Ldrag"></g>
+        </svg>
+        <div class="tools">
+          <button class="btn" id="zoomBtn">확대해서 보기</button>
+          <button class="btn" id="sheetBtn">정리</button>
+        </div>
+        <button class="btn reset" id="resetBtn">처음부터</button>
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+        <div class="sheet" id="sheet" aria-hidden="true">
+          <div class="sheet-head"><span class="tag result">정리</span><button class="btn" id="sheetClose">닫기</button></div>
+          <ol class="qs">
+            <li><span class="qn">1</span><p>전극 주변의 색이 변화하는가? 그 까닭을 설명해 보자.</p></li>
+            <li><span class="qn">2</span><p>(+)극과 (−)극에서 발생한 기체를 각각 써 보자.</p></li>
+            <li><span class="qn">3</span><p>(+)극과 (−)극에서 발생한 기체의 부피비를 써 보자.</p></li>
+          </ol>
+          <p class="note">답은 교과서에 기록하자.</p>
+        </div>
+      </div>
+
+      <section class="panel">
+        <div class="ptop"><span class="tag prep" id="tag">준비</span><span class="count" id="count">1 / 12</span></div>
+        <button class="btn next" id="next">다음 단계</button>
+        <div class="stepline"><span class="stepnum" id="num">1</span><p class="steptext" id="stext"></p></div>
+        <p class="hint" id="hint"></p>
+      </section>
+    </section>
+  </div>
+</div>
+
+<script>
+/* ───────── 교사용 설정값 ───────── */
+const CFG = {
+  fillTarget: 1/3,    // 플라스틱 병에 넣는 용액의 양(병 높이 대비 비율, 교과서: 1/3 정도)
+  pourRate: 0.12,     // 플라스틱 병에 붓는 속도(1초에 병 높이의 몇 배만큼 차는지)
+  pipFillRate: 0.35,  // 스포이트를 채우는 속도(1초에 채워지는 비율)
+  runTime: 24,        // 전선을 연결한 뒤 기체가 최대로 모이기까지 걸리는 시간(초)
+  h2Max: 0.72,        // (−)극 스포이트에 모이는 기체의 최대 양(스포이트 부푼 부분 높이 대비)
+  gasRatio: 0.5,      // (+)극 기체 부피 ÷ (−)극 기체 부피 (교과서 기준 1 : 2 → 0.5)
+  bubbleRate: 9,      // (−)극에서 1초에 생기는 기포 수 ((+)극은 이 값 × gasRatio)
+  colorTime: 10,      // 전극 주변 BTB 색이 뚜렷해지기까지 걸리는 시간(초)
+  watchNeed: 3,       // 관찰 단계: [확대해서 보기]로 보고 있어야 하는 시간(초)
+  snap: 60            // 점선 자리에 딱 붙는 거리(SVG 좌표 단위)
+};
+
+const FRAC = '<span class="frac"><span>1</span><span>3</span></span>';
+const STEPS = [
+  {tag:'준비', cls:'prep', text:'실험복, 보안경, 실험용 장갑을 착용한다.', hint:'왼쪽의 실험복·보안경·장갑 아이콘을 하나씩 눌러 착용하자.', ok:'안전 장비를 모두 착용했다.'},
+  {tag:'준비', cls:'prep', text:'준비물을 실험대로 옮긴다.', hint:'선반 위의 준비물을 하나씩 눌러 실험대로 옮기자.', ok:'준비물을 모두 옮겼다.'},
+  {tag:'과정 1', cls:'', text:'홈판에 플라스틱 병을 꽂는다.', hint:'플라스틱 병을 끌어서 홈판의 점선 자리에 놓자.', ok:'플라스틱 병을 홈판에 꽂았다.'},
+  {tag:'과정 1', cls:'', text:'BTB 용액을 넣은 황산 나트륨 수용액을 '+FRAC+' 정도 넣는다.', hint:'시약병을 끌어 플라스틱 병 위에 대고 누르고 있으면 용액이 부어진다. 점선까지 부어 보자.', ok:'플라스틱 병에 용액을 '+FRAC+' 정도 넣었다.'},
+  {tag:'과정 2', cls:'', text:'일회용 스포이트 2개의 아랫부분을 잘라 낸다.', hint:'가위를 끌어서 스포이트 끝의 점선에 대 보자.', ok:'스포이트 2개의 아랫부분을 잘라 냈다.'},
+  {tag:'과정 2', cls:'', text:'스포이트에 황산 나트륨 수용액을 가득 채운다.', hint:'시약병을 끌어 스포이트 위에 대고 누르고 있으면 용액이 부어진다. 두 스포이트를 모두 채워 보자.', ok:'스포이트 2개에 용액을 가득 채웠다.'},
+  {tag:'과정 2', cls:'', text:'스포이트를 뒤집어 플라스틱 병에 꽂는다.', hint:'스포이트를 끌어서 플라스틱 병의 점선 자리에 놓자.', ok:'스포이트 2개를 플라스틱 병에 뒤집어 꽂았다.'},
+  {tag:'과정 3', cls:'', text:'스포이트의 아랫부분에 침핀을 찔러 넣는다.', hint:'침핀을 끌어서 스포이트 옆의 점선 동그라미에 놓자.', ok:'두 스포이트에 침핀을 찔러 넣었다.'},
+  {tag:'과정 3', cls:'', text:'집게 달린 전선으로 9 V 건전지에 연결한다.', hint:'전선의 집게를 끌어서 침핀 머리에 물려 보자.', ok:'침핀을 9 V 건전지에 연결했다.'},
+  {tag:'과정 3', cls:'', text:'일어나는 변화를 관찰한다.', hint:'[확대해서 보기]를 눌러 두 스포이트의 색과 모이는 기체의 양을 비교해 보자.', ok:'두 전극 주변의 변화를 관찰했다.'},
+  {tag:'정리', cls:'result', text:'실험 결과를 정리한다.', hint:'정리 발문을 읽고, 답은 교과서에 기록하자.', ok:'정리 발문을 확인했다.'},
+  {tag:'뒷정리', cls:'prep', text:'실험 후 남은 용액은 폐수처리 기준과 방법에 따라 처리한다.', hint:'폐수통을 눌러 남은 용액을 처리하자.', ok:'뒷정리를 마쳤다.'}
+];
+const N = STEPS.length;
+
+/* ───────── 기본 도구 ───────── */
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const NS = 'http://www.w3.org/2000/svg';
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const svg = $('#scene');
+const COL = {green:'#7cc36e', yellow:'#f1cb33', blue:'#3f7fd4'};
+const RAD = Math.PI/180;
+const SLOT = [{x:494,y:495,a:-5,side:-1},{x:526,y:495,a:5,side:1}];   // 플라스틱 병에 꽂힌 스포이트 자리
+const STAND = [{x:395,y:215},{x:435,y:215}];                           // 홈판에 거꾸로 세운 스포이트
+const LYING = [{x:330,y:560},{x:330,y:588}];                           // 실험대에 눕힌 스포이트(자를 자리)
+const PIN_Y = -165;
+const HOME = {reagent:[120,540,0], bottle:[300,540,0], scissors:[690,585,-90],
+  pin:[[722,492,80],[748,492,100]], clip:{red:[800,570,180], black:[842,590,180]}};
+const TERM = {red:{x:864,y:394}, black:{x:896,y:394}};
+const VB_FULL = [0,0,1000,600], VB_ZOOM = [215,165,590,354];
+
+const dist = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
+function setT(el,x,y,a=0,s=1){ el.style.transform = `translate(${x}px,${y}px) rotate(${a}deg) scale(${s})`; }
+function tp(o,lx,ly){ const c=Math.cos(o.a*RAD), s=Math.sin(o.a*RAD); return {x:o.x+lx*c-ly*s, y:o.y+lx*s+ly*c}; }
+function headPos(s){ const o=SLOT[s]; return tp(o, o.side*40, PIN_Y); }
+function toSvg(e){ const p=svg.createSVGPoint(); p.x=e.clientX; p.y=e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+function mk(layer, inner, o={}){
+  const g=document.createElementNS(NS,'g');
+  g.setAttribute('class','obj'+(o.cls?' '+o.cls:''));
+  if(o.drag){ g.dataset.drag=o.drag; g.dataset.layer=layer; }
+  if(o.tap) g.dataset.tap=o.tap;
+  g.innerHTML=inner; $(layer).appendChild(g); return g;
+}
+function setVis(el,on){ el.style.opacity = on?1:0; el.style.pointerEvents = on?'':'none'; }
+
+/* ───────── 그림 ───────── */
+const PIP_D = 'M-15,-305 A15,15 0 0 1 15,-305 L15,-214 Q15,-202 6,-196 L6,0 L-6,0 L-6,-196 Q-15,-202 -15,-214 Z';
+const TIP_D = 'M-6,0 L-2.5,9 L-2.5,26 L2.5,26 L2.5,9 L6,0 Z';
+function ticks(){ let s=''; for(let k=1;k<=11;k++){ const y=-320+k*10; s+=`<line x1="15" x2="${k%5===0?6:10}" y1="${y}" y2="${y}"/>`; } return s; }
+
+function reagentM(){ return `
+<rect x="-50" y="-160" width="100" height="165" fill="transparent"/>
+<rect x="-35" y="-122" width="70" height="122" rx="12" fill="var(--glass)" stroke="var(--glass-line)" stroke-width="2"/>
+<rect x="-30" y="-100" width="60" height="95" rx="8" fill="${COL.green}" opacity=".85"/>
+<rect x="-13" y="-148" width="26" height="30" fill="var(--glass)" stroke="var(--glass-line)" stroke-width="2"/>
+<rect x="-16" y="-154" width="32" height="9" rx="3" fill="#8fa0a4"/>
+<rect x="-28" y="-82" width="56" height="42" rx="4" fill="#fff" stroke="#c8d0cf"/>
+<text class="sv-label" x="0" y="-64" text-anchor="middle" font-size="11" font-weight="700" fill="#231f20">Na<tspan dy="3" font-size="8">2</tspan><tspan dy="-3">SO</tspan><tspan dy="3" font-size="8">4</tspan><tspan dy="-3">(</tspan><tspan font-family="STIX Two Text,serif" font-style="italic">aq</tspan>)</text>
+<text class="sv-label" x="0" y="-48" text-anchor="middle" font-size="9.5" fill="#646b6c">+ BTB</text>`; }
+
+function btbM(){ return `
+<rect x="-19" y="-72" width="38" height="72" rx="7" fill="#9a5a24" opacity=".88"/>
+<rect x="-9" y="-86" width="18" height="15" rx="2" fill="#3a3a3a"/>
+<ellipse cx="0" cy="-94" rx="7" ry="9" fill="#2b2b2b"/>
+<rect x="-15" y="-52" width="30" height="22" rx="3" fill="#fff"/>
+<text class="sv-label" x="0" y="-37" text-anchor="middle" font-size="10" font-weight="800" fill="#231f20">BTB</text>`; }
+
+function bottleM(p){ return `
+<rect x="-50" y="-180" width="100" height="185" fill="transparent"/>
+<clipPath id="${p}clipB"><rect x="-36" y="-166" width="72" height="162" rx="6"/></clipPath>
+<rect x="-40" y="-170" width="80" height="170" rx="9" fill="var(--glass)" stroke="var(--glass-line)" stroke-width="2"/>
+<g clip-path="url(#${p}clipB)"><rect id="${p}btlLiq" x="-40" y="0" width="80" height="0" fill="${COL.green}" opacity=".82"/></g>
+<rect x="-30" y="-155" width="9" height="130" rx="4.5" fill="#fff" opacity=".35"/>
+<rect x="-43" y="-176" width="86" height="9" rx="3" fill="var(--glass)" stroke="var(--glass-line)" stroke-width="2"/>
+<line id="${p}btlTarget" x1="-40" x2="40" y1="${-4-162*CFG.fillTarget}" y2="${-4-162*CFG.fillTarget}" stroke="var(--mint-deep)" stroke-width="2.5" stroke-dasharray="6 4" opacity="0"/>`; }
+
+function plateM(){
+  let wells=''; for(let k=-3;k<=3;k++) wells+=`<rect x="${k*40-14}" y="-33" width="28" height="22" rx="6" fill="none" stroke="var(--glass-line)" opacity=".45"/>`;
+  return `
+<rect x="-150" y="-45" width="300" height="45" rx="8" fill="var(--glass)" stroke="var(--glass-line)" stroke-width="2"/>
+${wells}
+<ellipse cx="-115" cy="-45" rx="15" ry="4" fill="rgba(0,0,0,.1)"/><ellipse cx="-75" cy="-45" rx="15" ry="4" fill="rgba(0,0,0,.1)"/>
+<ellipse cx="75" cy="-45" rx="15" ry="4" fill="rgba(0,0,0,.1)"/><ellipse cx="115" cy="-45" rx="15" ry="4" fill="rgba(0,0,0,.1)"/>
+<ellipse cx="0" cy="-45" rx="42" ry="6" fill="rgba(0,0,0,.1)"/>`; }
+
+function pipOutline(){ return `<path d="${TIP_D}" fill="var(--glass)" stroke="var(--glass-line)" stroke-width="1.5"/><path d="${PIP_D}" fill="var(--glass)" stroke="var(--glass-line)" stroke-width="1.6"/><g stroke="var(--glass-line)" stroke-width="1.1">${ticks()}</g>`; }
+function pipM(i){ return `
+<rect x="-24" y="-330" width="48" height="360" fill="transparent"/>
+<clipPath id="pc${i}"><path d="${PIP_D}"/></clipPath>
+<path class="tip" id="tip${i}" d="${TIP_D}" fill="var(--glass)" stroke="var(--glass-line)" stroke-width="1.5"/>
+<path d="${PIP_D}" fill="var(--glass)"/>
+<g clip-path="url(#pc${i})">
+  <rect id="pl${i}" x="-16" width="32" y="0" height="0" fill="${COL.green}" opacity=".85"/>
+  <rect id="pa${i}" x="-16" width="32" y="0" height="0" opacity="0"/>
+  <rect id="pz${i}" x="-16" width="32" y="0" height="0" opacity="0"/>
+  <g id="pb${i}"></g>
+  <rect x="-12" y="-300" width="5" height="90" rx="2.5" fill="#fff" opacity=".35"/>
+</g>
+<path d="${PIP_D}" fill="none" stroke="var(--glass-line)" stroke-width="1.6"/>
+<g stroke="var(--glass-line)" stroke-width="1.1">${ticks()}</g>
+<line id="cut${i}" x1="-14" x2="14" y1="0" y2="0" stroke="var(--mint-deep)" stroke-width="2.5" stroke-dasharray="4 3" opacity="0"/>
+<g id="pinT${i}" opacity="0"></g>
+<g id="pinA${i}"></g>`; }
+function pinM(side){ return `<line x1="${side*40}" y1="${PIN_Y}" x2="${-side*3}" y2="${PIN_Y}" stroke="#9aa3a8" stroke-width="2.2" stroke-linecap="round"/><circle cx="${side*40}" cy="${PIN_Y}" r="5" fill="#d8b24a" stroke="#9c7b22"/>`; }
+function pinTargetM(side){ return `<line x1="${side*40}" y1="${PIN_Y}" x2="${-side*3}" y2="${PIN_Y}" stroke="var(--mint-deep)" stroke-width="2" stroke-dasharray="3 3"/><circle cx="${side*40}" cy="${PIN_Y}" r="9" fill="none" stroke="var(--mint-deep)" stroke-width="2" stroke-dasharray="3 3"/>`; }
+function gPinM(){ return `<rect x="-14" y="-16" width="64" height="32" fill="transparent"/><line x1="0" y1="0" x2="40" y2="0" stroke="#9aa3a8" stroke-width="2.4" stroke-linecap="round"/><circle cx="0" cy="0" r="5.5" fill="#d8b24a" stroke="#9c7b22"/>`; }
+function cushionM(){ return `<ellipse cx="0" cy="-3" rx="34" ry="7" fill="#9a5a34"/><path d="M-30,-6 Q-30,-38 0,-40 Q30,-38 30,-6 Z" fill="#d9534f"/><path d="M-18,-30 Q0,-36 16,-30" stroke="#fff" stroke-opacity=".35" stroke-width="3" fill="none" stroke-linecap="round"/>`; }
+function scissorsM(){ return `
+<rect x="-24" y="-64" width="48" height="90" fill="transparent"/>
+<path d="M0,-22 L-4.5,22 L-1,22 L2,-22 Z" fill="#b8c0c4" stroke="#7d868a"/>
+<path d="M0,-22 L4.5,22 L1,22 L-2,-22 Z" fill="#d3d9dc" stroke="#7d868a"/>
+<path d="M-1,-22 L-8,-40 M1,-22 L8,-40" stroke="#e8843a" stroke-width="5" stroke-linecap="round"/>
+<circle cx="-10" cy="-50" r="9" fill="none" stroke="#e8843a" stroke-width="5"/>
+<circle cx="10" cy="-50" r="9" fill="none" stroke="#e8843a" stroke-width="5"/>
+<circle cx="0" cy="-22" r="2.5" fill="#555"/>`; }
+function batteryM(){ return `
+<rect x="-42" y="-140" width="84" height="140" rx="7" fill="#3c3f8f"/>
+<path d="M-42,-113 V-133 a7,7 0 0 1 7,-7 H35 a7,7 0 0 1 7,7 V-113 Z" fill="#26284f"/>
+<circle cx="-16" cy="-146" r="7" fill="#c9cdd0" stroke="#7e878b" stroke-width="1.5"/>
+<path d="M8,-146 l4,-7 h8 l4,7 l-4,7 h-8 z" fill="#c9cdd0" stroke="#7e878b" stroke-width="1.5"/>
+<text class="sv-label" x="-16" y="-120" fill="#fff" font-size="18" font-weight="800" text-anchor="middle">+</text>
+<text class="sv-label" x="16" y="-120" fill="#fff" font-size="18" font-weight="800" text-anchor="middle">−</text>
+<text class="sv-label" x="0" y="-58" fill="#fff" font-size="22" font-weight="800" text-anchor="middle">9 V</text>`; }
+function clipM(col){ return `
+<rect x="-58" y="-18" width="70" height="36" fill="transparent"/>
+<path d="M-44,-7 L-16,-7 L-12,-5 L-12,5 L-16,7 L-44,7 Q-48,0 -44,-7 Z" fill="${col}" stroke="rgba(0,0,0,.3)"/>
+<path d="M-13,-5 L1,-2.5 M-13,5 L1,2.5" stroke="#a7b0b4" stroke-width="3" stroke-linecap="round"/>`; }
+function wasteM(){ return `
+<rect x="-45" y="-110" width="90" height="115" fill="transparent"/>
+<path d="M-32,-90 L32,-90 L27,0 L-27,0 Z" fill="#8a9a9e"/>
+<rect x="-36" y="-99" width="72" height="11" rx="3" fill="#6c7a7e"/>
+<rect x="-20" y="-66" width="40" height="24" rx="3" fill="#fff"/>
+<text class="sv-label" x="0" y="-49" text-anchor="middle" font-size="13" font-weight="800" fill="#231f20">폐수</text>`; }
+function labelM(pole){ const plus=pole==='+'; return `<rect x="-27" y="-13" width="54" height="26" rx="13" fill="${plus?'#d8342c':'#2b2b2b'}"/><text class="sv-label" x="0" y="5" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">(${plus?'+':'−'})극</text>`; }
+function wireIconM(){ return `
+<path d="M-32,-18 C-12,-60 10,4 32,-34" stroke="#d8342c" stroke-width="3.5" fill="none"/>
+<path d="M-32,-6 C-6,-44 12,14 32,-18" stroke="#2b2b2b" stroke-width="3.5" fill="none"/>
+<g transform="translate(-30,-18) rotate(200) scale(.55)">${clipM('#d8342c')}</g>
+<g transform="translate(-30,-6) rotate(170) scale(.55)">${clipM('#2b2b2b')}</g>`; }
+
+/* ───────── 상태 ───────── */
+let S, G, drag=null;
+function fresh(){ return {
+  step:0, done:false,
+  worn:{coat:false,goggles:false,gloves:false},
+  moved:{},
+  bottle:{placed:false, level:0},
+  pip:[{state:'lying',cut:false,fill:0,slot:-1},{state:'lying',cut:false,fill:0,slot:-1}],
+  slotPip:[-1,-1], slotPin:[false,false], pins:[{slot:-1},{slot:-1}],
+  clips:{red:-1,black:-1},
+  clipPose:{red:{x:HOME.clip.red[0],y:HOME.clip.red[1],rot:180}, black:{x:HOME.clip.black[0],y:HOME.clip.black[1],rot:180}},
+  pour:null, running:false, t:0, gas:[0,0], color:[0,0], acc:[0,0], bubbles:[],
+  watch:0, zoom:false, vb:VB_FULL.slice(), vbT:VB_FULL.slice(), cleaned:false
+};}
+const poleOf = s => S.clips.red===s ? '+' : (S.clips.black===s ? '-' : null);
+
+const ITEMS = [
+  {id:'reagent',  s:.5,  to:[120,540,1], m:reagentM},
+  {id:'btb',      s:.75, to:[205,540,1], m:btbM},
+  {id:'pipette',  s:.24, to:[220,574,.75], m:()=>`<g transform="translate(-24,0)">${pipOutline()}</g><g transform="translate(24,0)">${pipOutline()}</g>`},
+  {id:'wire',     s:1,   to:[820,580,1], m:wireIconM},
+  {id:'battery',  s:.5,  to:[880,540,1], m:batteryM},
+  {id:'plate',    s:.25, to:[510,540,1], m:plateM},
+  {id:'bottle',   s:.45, to:[300,540,1], m:()=>bottleM('s')},
+  {id:'pin',      s:.9,  to:[735,540,1], m:()=>cushionM()+`<g transform="translate(-10,-45) rotate(80)">${gPinM()}</g><g transform="translate(12,-45) rotate(100)">${gPinM()}</g>`},
+  {id:'scissors', s:.8,  to:[690,585,1], m:scissorsM}
+];
+
+function buildScene(){
+  ['#Lback','#Lbottle','#Lpip','#Lplate','#Lfront','#Lreagent','#Lwire','#Llabel','#Lshelf','#Ldrag'].forEach(s=>$(s).innerHTML='');
+  G = {};
+  G.btb = mk('#Lback', btbM()); setT(G.btb,205,540);
+  G.battery = mk('#Lback', batteryM()); setT(G.battery,880,540);
+  G.bottle = mk('#Lbottle', bottleM(''), {drag:'bottle'}); setT(G.bottle,...HOME.bottle);
+  G.pip = [0,1].map(i => mk('#Lpip', pipM(i), {drag:'pip'+i}));
+  [0,1].forEach(placePip);
+  G.plate = mk('#Lplate', plateM()); setT(G.plate,510,540);
+  G.ghostBottle = mk('#Lfront', `<rect x="-40" y="-170" width="80" height="170" rx="9" fill="none" stroke="var(--mint-deep)" stroke-width="2.5" stroke-dasharray="7 6"/>`); setT(G.ghostBottle,510,530);
+  G.ghostSlot = SLOT.map(o => { const g=mk('#Lfront', `<path d="${PIP_D}" fill="none" stroke="var(--mint-deep)" stroke-width="2" stroke-dasharray="6 5"/>`); setT(g,o.x,o.y,o.a); return g; });
+  G.cushion = mk('#Lfront', cushionM()); setT(G.cushion,735,540);
+  G.pins = [0,1].map(i => { const g=mk('#Lfront', gPinM(), {drag:'pin'+i}); setT(g,...HOME.pin[i]); return g; });
+  G.scissors = mk('#Lfront', scissorsM(), {drag:'scissors'}); setT(G.scissors,...HOME.scissors);
+  G.waste = mk('#Lfront', wasteM(), {tap:'waste'}); setT(G.waste,760,540);
+  G.clipT = [0,1].map(s => { const h=headPos(s); const g=mk('#Lfront', `<circle r="13" class="ring"/>`); setT(g,h.x,h.y); return g; });
+  G.stream = mk('#Lreagent', `<line id="stream" x1="0" y1="0" x2="0" y2="0" stroke="${COL.green}" stroke-width="5" stroke-linecap="round" opacity=".85"/>`, {cls:'fixed'});
+  G.reagent = mk('#Lreagent', reagentM(), {drag:'reagent'}); setT(G.reagent,...HOME.reagent);
+  G.wire = {};
+  ['red','black'].forEach(c => {
+    const p=document.createElementNS(NS,'path');
+    p.setAttribute('fill','none'); p.setAttribute('stroke', c==='red'?'#d8342c':'#2b2b2b');
+    p.setAttribute('stroke-width','3.5'); p.setAttribute('stroke-linecap','round');
+    p.style.transition='opacity .35s';
+    $('#Lback').appendChild(p); G.wire[c]=p;
+  });
+  G.clip = {
+    red: mk('#Lwire', clipM('#d8342c'), {drag:'clipR', cls:'fixed'}),
+    black: mk('#Lwire', clipM('#2b2b2b'), {drag:'clipB', cls:'fixed'})
+  };
+  ['red','black'].forEach(c => { const P=S.clipPose[c]; setT(G.clip[c],P.x,P.y,P.rot); });
+  G.label = [0,1].map(() => mk('#Llabel', '', {cls:'fixed'}));
+
+  // 선반
+  const shelf = $('#Lshelf');
+  shelf.style.transition = 'opacity .5s';
+  shelf.innerHTML = `<rect x="30" y="172" width="770" height="10" rx="3" fill="var(--shelf)"/><rect x="60" y="182" width="8" height="20" fill="var(--shelf)"/><rect x="762" y="182" width="8" height="20" fill="var(--shelf)"/>`;
+  G.icons = {};
+  ITEMS.forEach((it,k) => {
+    const g = mk('#Lshelf', it.m(), {tap:'shelf:'+it.id});
+    g.insertAdjacentHTML('afterbegin', `<rect x="${-44/it.s}" y="${-100/it.s}" width="${88/it.s}" height="${104/it.s}" fill="transparent"/>`);
+    setT(g, 75+k*88, 170, 0, it.s);
+    G.icons[it.id] = g;
+  });
+
+  // 매 프레임 쓰는 요소
+  G.btlLiq = $('#btlLiq'); G.btlTarget = $('#btlTarget'); G.streamLine = $('#stream');
+  G.pl=[0,1].map(i=>$('#pl'+i)); G.pa=[0,1].map(i=>$('#pa'+i)); G.pz=[0,1].map(i=>$('#pz'+i));
+  G.cut=[0,1].map(i=>$('#cut'+i)); G.pinT=[0,1].map(i=>$('#pinT'+i));
+}
+
+function placePip(i){
+  const p=S.pip[i], g=G.pip[i];
+  if(p.state==='lying') setT(g, LYING[i].x, LYING[i].y, -90, .75);
+  else if(p.state==='stand') setT(g, STAND[i].x, STAND[i].y, -180, 1);
+  else if(p.state==='in'){ const o=SLOT[p.slot]; setT(g, o.x, o.y, o.a, 1); }
+}
+
+/* ───────── 끌기 ───────── */
+function canDrag(name){
+  const st=S.step, dn=S.done;
+  if(name==='bottle') return st===2 && !S.bottle.placed;
+  if(name==='reagent') return (st===3 || st===5) && !dn;
+  if(name==='scissors') return st===4 && !dn;
+  if(name.startsWith('pip')) return st===6 && S.pip[+name[3]].state==='stand';
+  if(name.startsWith('pin')) return st===7 && S.pins[+name[3]].slot<0;
+  if(name==='clipR') return st===8 && S.clips.red<0;
+  if(name==='clipB') return st===8 && S.clips.black<0;
+  return false;
+}
+function pourTargets(){
+  if(S.step===3 && !S.done) return [{kind:'bottle', x:510, y:354}];
+  if(S.step===5) return [0,1].filter(i=>S.pip[i].state==='stand' && S.pip[i].fill<1).map(i=>({kind:'pip', i, x:STAND[i].x, y:215}));
+  return [];
+}
+
+const DR = {
+  bottle:{
+    move(p){ drag.o={x:p.x,y:p.y+85}; setT(G.bottle,drag.o.x,drag.o.y); },
+    end(){
+      const o=drag.o;
+      if(o && dist(o,{x:510,y:530})<CFG.snap+25){ S.bottle.placed=true; setT(G.bottle,510,530); complete(); }
+      else setT(G.bottle,...HOME.bottle);
+    }
+  },
+  reagent:{
+    move(p){
+      let best=null, bd=1e9;
+      for(const T of pourTargets()){ const d=dist(p,{x:T.x+70,y:T.y-70}); if(d<100 && d<bd){ bd=d; best=T; } }
+      S.pour=best;
+      if(best) setT(G.reagent, best.x+141, best.y-71, -110);
+      else setT(G.reagent, p.x, p.y+70);
+    },
+    end(){ S.pour=null; setT(G.reagent,...HOME.reagent); }
+  },
+  scissors:{
+    move(p){ drag.o={x:p.x,y:p.y+40}; setT(G.scissors,drag.o.x,drag.o.y,0); },
+    end(){
+      const o=drag.o; let hit=-1, bd=1e9;
+      if(o) [0,1].forEach(i=>{ if(!S.pip[i].cut){ const d=dist(o,LYING[i]); if(d<CFG.snap && d<bd){ bd=d; hit=i; } } });
+      if(hit>=0) cutPip(hit);
+      setT(G.scissors,...HOME.scissors);
+    }
+  },
+  pip:{
+    start(i){ S.pip[i].state='drag'; },
+    move(p,i){ drag.o={x:p.x,y:p.y+150}; setT(G.pip[i],drag.o.x,drag.o.y,0,1); },
+    end(i){
+      const o=drag.o; let s=-1, bd=1e9;
+      if(o) [0,1].forEach(k=>{ if(S.slotPip[k]<0){ const d=dist(o,SLOT[k]); if(d<CFG.snap+30 && d<bd){ bd=d; s=k; } } });
+      if(s>=0){ S.pip[i].state='in'; S.pip[i].slot=s; S.slotPip[s]=i; G.pinT[i].innerHTML=pinTargetM(SLOT[s].side); }
+      else S.pip[i].state='stand';
+      placePip(i);
+      if(S.slotPip[0]>=0 && S.slotPip[1]>=0) complete();
+    }
+  },
+  pin:{
+    move(p,i){ drag.o=p; setT(G.pins[i],p.x,p.y,p.x<510?0:180); },
+    end(i){
+      const p=drag.o; let s=-1, bd=1e9;
+      if(p) [0,1].forEach(k=>{ if(S.slotPip[k]>=0 && !S.slotPin[k]){ const d=dist(p,headPos(k)); if(d<CFG.snap && d<bd){ bd=d; s=k; } } });
+      if(s>=0){
+        S.slotPin[s]=true; S.pins[i].slot=s;
+        $('#pinA'+S.slotPip[s]).innerHTML=pinM(SLOT[s].side);
+        if(S.slotPin[0] && S.slotPin[1]) complete();
+      } else setT(G.pins[i],...HOME.pin[i]);
+    }
+  },
+  clip:{
+    move(p,c){ const rot=p.x<510?0:180; drag.o=p; S.clipPose[c]={x:p.x,y:p.y,rot}; setT(G.clip[c],p.x,p.y,rot); },
+    end(c){
+      const p=drag.o; let s=-1, bd=1e9;
+      if(p) [0,1].forEach(k=>{ if(S.slotPin[k] && S.clips.red!==k && S.clips.black!==k){ const d=dist(p,headPos(k)); if(d<CFG.snap && d<bd){ bd=d; s=k; } } });
+      if(s>=0){
+        const h=headPos(s), rot=s===0?0:180;
+        S.clips[c]=s; S.clipPose[c]={x:h.x,y:h.y,rot};
+        G.label[s].innerHTML = labelM(c==='red'?'+':'-');
+        setT(G.label[s], h.x + SLOT[s].side*30, h.y-28);
+      } else {
+        const H=HOME.clip[c]; S.clipPose[c]={x:H[0],y:H[1],rot:H[2]};
+      }
+      const P=S.clipPose[c]; setT(G.clip[c],P.x,P.y,P.rot);
+      if(S.clips.red>=0 && S.clips.black>=0){ S.running=true; S.t=0; complete(); }
+    }
+  }
+};
+function parseDrag(name){
+  if(name.startsWith('pip')) return ['pip', +name[3]];
+  if(name.startsWith('pin')) return ['pin', +name[3]];
+  if(name==='clipR') return ['clip','red'];
+  if(name==='clipB') return ['clip','black'];
+  return [name, null];
+}
+
+svg.addEventListener('pointerdown', e => {
+  if(drag) return;
+  const el = e.target.closest('[data-drag]');
+  if(!el) return;
+  const name = el.dataset.drag;
+  if(!canDrag(name)) return;
+  e.preventDefault();
+  try{ svg.setPointerCapture(e.pointerId); }catch(_){}
+  const [kind,arg] = parseDrag(name);
+  drag = {name, kind, arg, el, id:e.pointerId, o:null};
+  el.classList.add('dragging');
+  $('#Ldrag').appendChild(el);
+  DR[kind].start?.(arg);
+  DR[kind].move(toSvg(e), arg);
+});
+svg.addEventListener('pointermove', e => {
+  if(!drag || e.pointerId!==drag.id) return;
+  DR[drag.kind].move(toSvg(e), drag.arg);
+});
+function endDrag(e){
+  if(!drag || e.pointerId!==drag.id) return;
+  const d = drag;
+  DR[d.kind].end(d.arg);
+  d.el.classList.remove('dragging');
+  $(d.el.dataset.layer).appendChild(d.el);
+  drag = null;
+}
+svg.addEventListener('pointerup', endDrag);
+svg.addEventListener('pointercancel', endDrag);
+
+/* ───────── 누르기 ───────── */
+svg.addEventListener('click', e => {
+  const el = e.target.closest('[data-tap]');
+  if(!el) return;
+  const tap = el.dataset.tap;
+  if(tap.startsWith('shelf:')){
+    const id = tap.slice(6);
+    if(S.step===0){ toast('안전 장비를 먼저 착용하자.'); return; }
+    if(S.step!==1 || S.moved[id] || el.dataset.used) return;
+    el.dataset.used='1';
+    const it = ITEMS.find(x=>x.id===id);
+    setT(el, it.to[0], it.to[1], 0, it.to[2]);
+    setTimeout(()=>{
+      el.style.opacity=0; el.style.pointerEvents='none';
+      S.moved[id]=true; renderUI();
+      if(ITEMS.every(x=>S.moved[x.id])) complete();
+    }, RM?0:420);
+  }
+  if(tap==='waste'){
+    if(S.step!==11 || S.done) return;
+    S.cleaned=true; S.running=false;
+    S.bubbles.forEach(b=>b.c.remove()); S.bubbles=[];
+    ['red','black'].forEach(c=>{ const H=HOME.clip[c]; S.clipPose[c]={x:H[0],y:H[1],rot:H[2]}; setT(G.clip[c],H[0],H[1],H[2]); });
+    complete();
+  }
+});
+
+$$('.gear').forEach(b => b.addEventListener('click', () => {
+  const k=b.dataset.gear;
+  if(S.step!==0){ return; }
+  if(S.worn[k]) return;
+  S.worn[k]=true; renderUI();
+  if(S.worn.coat && S.worn.goggles && S.worn.gloves) complete();
+}));
+
+function cutPip(i){
+  S.pip[i].cut=true;
+  $('#tip'+i).classList.add('cutoff');
+  if(S.pip[0].cut && S.pip[1].cut){
+    complete();
+    setTimeout(()=>{ [0,1].forEach(k=>{ S.pip[k].state='stand'; placePip(k); }); }, RM?0:650);
+  }
+}
+
+/* ───────── 단계 진행 ───────── */
+let toastTimer;
+function toast(html){
+  const t=$('#toast'); t.innerHTML=html; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2300);
+}
+function complete(){
+  if(S.done) return;
+  S.done=true; toast(STEPS[S.step].ok);
+  const b=$('#next'); b.classList.remove('ready'); void b.offsetWidth; b.classList.add('ready');
+  updatePanel(); renderUI();
+}
+function enterStep(){
+  if(S.step===10){ openSheet(true); complete(); }
+  if(S.step===11){ openSheet(false); setZoom(false); }
+}
+function updatePanel(){
+  const st=STEPS[S.step], last=S.step===N-1;
+  const tag=$('#tag');
+  if(last && S.done){ tag.textContent='완료'; tag.className='tag result'; }
+  else { tag.textContent=st.tag; tag.className='tag'+(st.cls?' '+st.cls:''); }
+  $('#count').textContent=`${S.step+1} / ${N}`;
+  $('#num').textContent=S.step+1;
+  $('#stext').innerHTML=st.text;
+  $('#hint').innerHTML=st.hint;
+  const b=$('#next');
+  b.textContent = (last && S.done) ? '처음부터 다시' : '다음 단계';
+  if(!S.done) b.classList.remove('ready');
+  const pct = (S.step + (S.done?1:0)) / N * 100;
+  $('#barFill').style.width=pct+'%'; $('#barDot').style.left=pct+'%';
+}
+function renderUI(){
+  $$('.gear').forEach(b=>b.classList.toggle('on', !!S.worn[b.dataset.gear]));
+  $$('#items li').forEach(li=>li.classList.toggle('on', !!S.moved[li.dataset.item]));
+  $('#signElec').classList.toggle('pulse', S.step===8 && !S.done);
+  $('#signWaste').classList.toggle('pulse', S.step===11 && !S.done);
+}
+$('#next').addEventListener('click', () => {
+  if(!S.done){ toast('이 단계를 먼저 마치자.'); return; }
+  if(S.step===N-1){ reset(); return; }
+  S.step++; S.done=false;
+  enterStep(); updatePanel(); renderUI();
+});
+
+function openSheet(on){ const s=$('#sheet'); s.classList.toggle('open',on); s.setAttribute('aria-hidden', on?'false':'true'); }
+$('#sheetBtn').addEventListener('click', () => {
+  if(S.step<10){ toast('실험을 마친 뒤 정리하자.'); return; }
+  openSheet(!$('#sheet').classList.contains('open'));
+});
+$('#sheetClose').addEventListener('click', () => openSheet(false));
+
+function setZoom(on){
+  S.zoom=on; S.vbT = on ? VB_ZOOM.slice() : VB_FULL.slice();
+  const b=$('#zoomBtn'); b.textContent = on ? '원래대로 보기' : '확대해서 보기'; b.classList.toggle('on',on);
+}
+$('#zoomBtn').addEventListener('click', () => setZoom(!S.zoom));
+
+function reset(){
+  if(drag){ drag=null; }
+  S=fresh(); buildScene(); openSheet(false); setZoom(false);
+  S.vb=VB_FULL.slice(); svg.setAttribute('viewBox', S.vb.join(' '));
+  updatePanel(); renderUI();
+}
+$('#resetBtn').addEventListener('click', reset);
+
+/* ───────── 기포 ───────── */
+function spawn(s){
+  const pi=S.slotPip[s]; if(pi<0) return;
+  const c=document.createElementNS(NS,'circle');
+  c.setAttribute('fill','rgba(255,255,255,.9)'); c.setAttribute('stroke','rgba(60,90,100,.45)'); c.setAttribute('stroke-width','.5');
+  $('#pb'+pi).appendChild(c);
+  S.bubbles.push({c, s, x:(Math.random()*2-1)*3.5, y:PIN_Y-2, v:45+Math.random()*45, r:1+Math.random()*1.6, ph:Math.random()*6});
+}
+function updateBubbles(dt){
+  S.bubbles = S.bubbles.filter(b => {
+    b.y -= b.v*dt; b.ph += dt*8;
+    if(b.y < -200){ b.x += (b.x>=0?1:-1)*dt*7; b.x=Math.max(-11,Math.min(11,b.x)); }
+    const top = -320 + S.gas[b.s]*120 + b.r + 1;
+    if(b.y <= top){ b.c.remove(); return false; }
+    b.c.setAttribute('cx', (b.x + Math.sin(b.ph)*.8).toFixed(2));
+    b.c.setAttribute('cy', b.y.toFixed(2));
+    b.c.setAttribute('r', b.r.toFixed(2));
+    return true;
+  });
+}
+
+/* ───────── 매 프레임 그리기 ───────── */
+function render(){
+  const st=S.step, M=S.moved;
+  setVis(G.reagent, M.reagent); setVis(G.btb, M.btb); setVis(G.battery, M.battery); setVis(G.plate, M.plate);
+  setVis(G.bottle, M.bottle && !S.cleaned);
+  G.pip.forEach(g=>setVis(g, M.pipette && !S.cleaned));
+  setVis(G.cushion, M.pin && st<11);
+  G.pins.forEach((g,i)=>setVis(g, M.pin && S.pins[i].slot<0 && st<11));
+  setVis(G.scissors, M.scissors && st<11);
+  setVis(G.waste, st===11);
+  ['red','black'].forEach(c=>{
+    setVis(G.clip[c], M.wire);
+    const P=S.clipPose[c], dir=P.rot===0?-1:1, R={x:P.x+dir*46, y:P.y}, T=TERM[c];
+    const low = P.x<700; G.wire[c].setAttribute('d', low ? `M${R.x},${R.y} C${R.x+dir*50},${R.y+230} ${T.x-150},${T.y-40} ${T.x},${T.y}` : `M${R.x},${R.y} C${R.x+dir*60},${R.y+70} ${T.x+(c==='red'?-30:30)},${T.y-90} ${T.x},${T.y}`);
+    G.wire[c].style.opacity = (M.wire && M.battery) ? 1 : 0;
+  });
+  const sh=$('#Lshelf'); sh.style.opacity = st<=1 ? 1 : 0; sh.style.pointerEvents = st<=1 ? '' : 'none';
+
+  // 점선 자리
+  setVis(G.ghostBottle, st===2 && !S.bottle.placed);
+  G.btlTarget.setAttribute('opacity', st===3 ? 1 : 0);
+  G.cut.forEach((l,i)=>l.setAttribute('opacity', st===4 && !S.pip[i].cut ? 1 : 0));
+  G.ghostSlot.forEach((g,s)=>setVis(g, st===6 && S.slotPip[s]<0));
+  G.pinT.forEach((g,i)=>{ const sl=S.pip[i].slot; g.setAttribute('opacity', st===7 && sl>=0 && !S.slotPin[sl] ? 1 : 0); });
+  G.clipT.forEach((g,s)=>setVis(g, st===8 && S.slotPin[s] && S.clips.red!==s && S.clips.black!==s));
+  G.label.forEach((g,s)=>setVis(g, poleOf(s)!==null && !S.cleaned));
+
+  // 용액
+  const L=S.bottle.level;
+  G.btlLiq.setAttribute('y', -4-162*L); G.btlLiq.setAttribute('height', 162*L);
+  for(let i=0;i<2;i++){
+    const p=S.pip[i], s=p.state==='in'?p.slot:-1;
+    const gasH = s>=0 ? S.gas[s]*120 : 0;
+    const y1=-322+gasH, y2=-322+p.fill*324;
+    G.pl[i].setAttribute('y', y1); G.pl[i].setAttribute('height', Math.max(0,y2-y1));
+    const c = s>=0 ? S.color[s] : 0, pole = s>=0 ? poleOf(s) : null;
+    if(c>0 && pole){
+      const col = pole==='+' ? COL.yellow : COL.blue;
+      G.pa[i].setAttribute('fill',col); G.pa[i].setAttribute('y',y1); G.pa[i].setAttribute('height',Math.max(0,PIN_Y+30-y1)); G.pa[i].setAttribute('opacity',(.92*c).toFixed(3));
+      G.pz[i].setAttribute('fill',col); G.pz[i].setAttribute('y',PIN_Y+30); G.pz[i].setAttribute('height',80); G.pz[i].setAttribute('opacity',(.45*c).toFixed(3));
+    } else { G.pa[i].setAttribute('opacity',0); G.pz[i].setAttribute('opacity',0); }
+  }
+
+  // 끌 수 있는 것 표시
+  $$('#scene [data-drag]').forEach(el=>el.classList.toggle('can', canDrag(el.dataset.drag)));
+  $$('#scene [data-tap]').forEach(el=>{
+    const t=el.dataset.tap;
+    el.classList.toggle('can', (t.startsWith('shelf:') && S.step===1 && !S.moved[t.slice(6)]) || (t==='waste' && S.step===11 && !S.done));
+  });
+}
+
+function stream(T, surf, w){
+  const l=G.streamLine;
+  l.setAttribute('x1',T.x); l.setAttribute('y1',T.y-20); l.setAttribute('x2',T.x); l.setAttribute('y2',surf);
+  l.setAttribute('stroke-width',w); G.stream.style.opacity=1;
+}
+
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(.05,(now-last)/1000); last=now;
+
+  // 붓기
+  let pouring=false;
+  if(drag && drag.kind==='reagent' && S.pour){
+    const T=S.pour;
+    if(T.kind==='bottle' && S.step===3 && !S.done){
+      S.bottle.level=Math.min(CFG.fillTarget, S.bottle.level+CFG.pourRate*dt);
+      stream(T, 526-162*S.bottle.level, 6); pouring=true;
+      if(S.bottle.level>=CFG.fillTarget-1e-4) complete();
+    } else if(T.kind==='pip' && S.step===5){
+      const p=S.pip[T.i];
+      if(p.fill<1){ p.fill=Math.min(1,p.fill+CFG.pipFillRate*dt); stream(T, 537-324*p.fill, 3.5); pouring=true; }
+      if(S.pip[0].fill>=1 && S.pip[1].fill>=1) complete();
+    }
+  }
+  if(!pouring) G.stream.style.opacity=0;
+
+  // 전기 분해
+  if(S.running){
+    S.t+=dt;
+    const k=Math.min(1,S.t/CFG.runTime);
+    for(let s=0;s<2;s++){
+      const pole=poleOf(s);
+      const max = pole==='-' ? CFG.h2Max : CFG.h2Max*CFG.gasRatio;
+      S.gas[s]=max*k;
+      S.color[s]=Math.min(1,S.t/CFG.colorTime);
+      if(k<1){
+        S.acc[s] += (pole==='-' ? CFG.bubbleRate : CFG.bubbleRate*CFG.gasRatio)*dt;
+        while(S.acc[s]>=1){ S.acc[s]--; spawn(s); }
+      }
+    }
+  }
+  updateBubbles(dt);
+
+  // 관찰
+  if(S.step===9 && !S.done && S.zoom && S.running){
+    S.watch+=dt; if(S.watch>=CFG.watchNeed) complete();
+  }
+
+  // 확대
+  const f = RM ? 1 : 1-Math.exp(-dt*9);
+  let moved=false;
+  for(let j=0;j<4;j++){ const d=S.vbT[j]-S.vb[j]; if(Math.abs(d)>.05){ S.vb[j]+=d*f; moved=true; } else S.vb[j]=S.vbT[j]; }
+  if(moved || true) svg.setAttribute('viewBox', S.vb.map(v=>v.toFixed(2)).join(' '));
+
+  render();
+  requestAnimationFrame(loop);
+}
+
+reset();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
