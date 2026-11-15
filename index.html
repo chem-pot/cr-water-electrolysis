@@ -6,14 +6,14 @@
 <title>물을 전기 분해 하기</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&family=Noto+Serif+KR:wght@600;700&family=STIX+Two+Text:ital@1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&family=Noto+Serif+KR:wght@500;600;700&family=STIX+Two+Text:ital@0;1&display=swap" rel="stylesheet">
 <style>
 :root{
   --mint:#5dc2b0; --mint-deep:#23907f; --mint-soft:#e3f5f1;
   --yellow:#f4c33b; --salmon:#e9966b; --num:#e8843a;
   --ink:#231f20; --muted:#646b6c; --line:#d9dddc;
   --paper:#fff; --panel:#f5f8f7; --stage:#fcfdfd;
-  --gray-tag:#98a2a2; --danger:#e0463a;
+  --gray-tag:#98a2a2;
   --table:#eef2f1; --table-edge:#cfd6d5;
   --glass:rgba(210,230,235,.45); --glass-line:#8fa6ac; --shelf:#d8cbb6;
   box-sizing:border-box;
@@ -146,12 +146,94 @@ aside h3{font-size:16px;margin:0 0 8px;font-weight:800}
   .steptext{font-size:19px}
   .tail,.dots{display:none}
 }
+/* ===== 공통 틀 (볼타 전지 기준으로 통일) ===== */
+:root{--danger:#e1251b; --safety:#1c5d8c; --safety-soft:#e4eef5}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){--safety:#6aa6d4; --safety-soft:#1d2e3b} }
+:root[data-theme="dark"]{--safety:#6aa6d4; --safety-soft:#1d2e3b}
+.top{height:68px}
+.badge{font-weight:700;letter-spacing:-.02em}
+.b1{width:68px;height:68px;font-size:17px}
+.b2{width:54px;height:54px;font-size:15px}
+.dots{width:76px;flex:none;height:4px;border:0;margin:0 8px;background:radial-gradient(circle,#b9c0bf 1.6px,transparent 2.1px) 0 0/8px 4px repeat-x}
+.bar{height:10px;border-radius:6px;background:var(--line)}
+.bar i{border-radius:6px;transition:width .6s ease}
+.bar b{transition:left .6s ease}
+.tail{height:10px;border-radius:6px;margin-left:12px}
+.body{gap:24px}
+aside{position:relative;border-left:0;padding:6px 0 0 30px}
+aside::before{content:"";position:absolute;left:4px;top:0;bottom:0;width:10px;border-radius:6px;background:var(--line)}
+aside h3{font-size:17px;font-weight:900;margin:8px 0 10px}
+.items li{gap:9px;font-size:16px;line-height:1.4;padding:5px 0}
+.items li.on{color:inherit}
+.box{width:20px;height:20px;border:1.8px solid var(--ink);margin-top:2px}
+.box svg{width:13px;height:13px}
+.caution{border-top:1.5px dashed var(--line);padding-top:12px;margin-bottom:0}
+.caution .warn{width:24px;height:22px}
+.caution li{font-size:14.5px;margin-bottom:5px}
+.caution li::before{background:var(--ink);left:0;top:.65em}
+.gears{gap:4px;margin-top:14px}
+.gear,.sign{width:36px;height:36px;border:2.5px solid var(--safety);color:var(--safety);background:var(--paper)}
+.gear svg,.sign svg{width:26px;height:26px}
+.gear{opacity:.32;transition:opacity .3s,background .3s}
+.gear.on{opacity:1;background:var(--safety-soft);border-color:var(--safety);color:var(--safety)}
+#signElec{border:none;background:none}
+#signElec svg{width:32px;height:32px}
+.gear-item{cursor:pointer;transition:opacity .35s}
+.gear-item.gone{opacity:0;pointer-events:none}
+.gear-bg{fill:var(--mint-soft);stroke:var(--mint);stroke-width:2.5}
+.gear-ic{color:var(--safety)}
+.gear-lbl{font:700 17px 'Noto Sans KR',sans-serif;fill:var(--ink)}
+.main{gap:12px}
+.title h1{font-size:28px;font-weight:900;margin:4px 0 6px;letter-spacing:-.03em}
+.goal{font-weight:500;font-size:17px;line-height:1.5}
+.goal b{font-weight:900;margin-right:12px}
+.stage{border-width:1.5px}
+.btn{min-height:48px;padding:0 18px;border-radius:24px;border:2px solid var(--mint);background:var(--paper);color:var(--mint-deep);font-size:16px;font-weight:700}
+.btn:disabled{opacity:.3;cursor:default}
+.btn.reset{border-color:var(--line);color:var(--muted)}
+.toast{background:var(--paper);border:2px solid var(--mint);color:var(--mint-deep);font-weight:700;font-size:17px;padding:10px 22px;border-radius:26px;max-width:none;white-space:nowrap}
+.sheet-head{justify-content:flex-start;gap:12px}
+.sheet-head .snote{flex:1;color:var(--muted);font-size:15px}
+.qn{color:var(--num);font-weight:900}
+.panel{padding:14px 16px 14px 22px;column-gap:20px}
+.tag{height:auto;font-size:15px;padding:3px 14px;border-radius:14px}
+.tag.gray{background:#98a2a2}
+.tag.mint{background:var(--mint)}
+.ptop{gap:0}
+.count{margin-left:10px;font-weight:400}
+.stepline{margin-top:8px;align-items:flex-start}
+.stepnum{font-weight:900;font-size:24px;line-height:1.35;min-width:18px}
+.steptext{line-height:1.45}
+.hint{margin:3px 0 0 30px;font-size:15.5px}
+.next{min-height:62px;min-width:156px;padding:0 26px;border-radius:31px;border:0;font-size:19px;background:var(--line);color:var(--muted)}
+.next.ready{background:var(--mint);color:#fff;animation:nudge 1.4s ease 2}
+@keyframes nudge{0%,100%{box-shadow:0 0 0 0 rgba(93,194,176,.55)}60%{box-shadow:0 0 0 12px rgba(93,194,176,0)}}
+@media (max-width:900px),(orientation:portrait){
+  .top{height:56px}
+  .b1{width:56px;height:56px;font-size:15px}.b2{width:46px;height:46px;font-size:13px}
+  .tail,.dots{display:block}
+  .dots{width:40px}.tail{width:60px}
+  .body{gap:12px;align-content:start}
+  .main{display:contents}
+  .title{order:-1}
+  aside{padding:0 0 8px}
+  aside::before,aside h3,.gears{display:none}
+  .items{margin:0}
+  .items li{font-size:14.5px;padding:2px 0}
+  .panel{grid-template-columns:1fr}
+  .next{grid-column:1;grid-row:auto;justify-self:end;min-height:54px;margin-top:8px}
+}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{transition:none!important;animation:none!important}
 }
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ic-coat" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><path d="M18 7 L24 14 L30 7 L37 10 Q40 11 40.5 15 L42 31 L36.5 31.5 L35.5 21 L35.5 42 L12.5 42 L12.5 21 L11.5 31.5 L6 31 L7.5 15 Q8 11 11 10 Z"/><path d="M18 7 L21 25 L24 14 L27 25 L30 7"/><path d="M24 25 V42"/><path d="M28.5 31 H32.5"/></g></symbol>
+  <symbol id="ic-goggle" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><path d="M7 19 Q7 14 13 14 H35 Q41 14 41 19 V26 Q41 33 34 33 Q29 33 27 29 Q24 25 21 29 Q19 33 14 33 Q7 33 7 26 Z"/><path d="M7 21 H3.5 M41 21 H44.5"/><path d="M12 19.5 H36" opacity=".55"/></g></symbol>
+  <symbol id="ic-glove" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round"><path d="M15.5 43 V27 L11 21 Q9 18 11.5 16.5 Q13.8 15.3 15.8 17.8 L18.5 21 V9 Q18.5 6.5 21 6.5 Q23.3 6.5 23.3 9 V20 M23.3 9 V6.8 Q23.3 4.3 25.7 4.3 Q28.2 4.3 28.2 6.8 V20 M28.2 9 Q28.2 6.4 30.5 6.4 Q33 6.4 33 8.8 V21 M33 13 Q33 10.8 35.2 10.8 Q37.4 10.8 37.4 13 V30 Q37.4 37.5 32.5 43 Z"/></g></symbol>
+</svg>
 <div class="app">
   <header class="top">
     <span class="badge b1">해 보기</span><span class="badge b2">실험</span>
@@ -176,20 +258,20 @@ aside h3{font-size:16px;margin:0 0 8px;font-weight:800}
       </ul>
 
       <div class="caution">
-        <svg class="warn" viewBox="0 0 24 24" aria-label="주의"><path d="M12 2.5 L22.5 21 H1.5 Z" fill="none" stroke="#e0463a" stroke-width="2.2" stroke-linejoin="round"/><path d="M12 9v6" stroke="#e0463a" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="18" r="1.4" fill="#e0463a"/></svg>
+        <svg class="warn" viewBox="0 0 24 24" aria-label="주의"><path d="M12 2.5 L22.5 21 H1.5 Z" fill="none" stroke="var(--danger)" stroke-width="2.2" stroke-linejoin="round"/><path d="M12 9v6" stroke="var(--danger)" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="18" r="1.4" fill="var(--danger)"/></svg>
         <ul>
           <li>실험복, 보안경, 실험용 장갑을 착용한다.</li>
           <li>황산 나트륨 수용액이 피부에 묻지 않도록 주의한다.</li>
-          <li>실험 후 남은 용액은 폐수처리 기준과 방법에 따라 처리한다.</li>
+          <li>실험 후 남은 용액은 폐수 처리 기준과 방법에 따라 처리한다.</li>
         </ul>
       </div>
 
       <div class="gears">
-        <button class="gear" data-gear="coat" aria-label="실험복 착용" title="실험복"><svg viewBox="0 0 32 32"><path class="f" d="M12 5h8l6 4-1.5 15H21v4h-10v-4H7.5L6 9z"/><path d="M16 5v23M12 5l4 6 4-6"/></svg></button>
-        <button class="gear" data-gear="goggles" aria-label="보안경 착용" title="보안경"><svg viewBox="0 0 32 32"><path class="f" d="M5 13.5c0-2 1.6-3.5 3.6-3.5h14.8c2 0 3.6 1.5 3.6 3.5v3.5c0 2.3-1.8 4-4 4h-3.2l-2.2-2.4h-3.2L12.2 21H9c-2.2 0-4-1.7-4-4z"/><path d="M5 14H2.5M27 14h2.5"/></svg></button>
-        <button class="gear" data-gear="gloves" aria-label="실험용 장갑 착용" title="실험용 장갑"><svg viewBox="0 0 32 32"><path class="f" d="M11.5 28v-7.5L8 15.8c-.9-1.3.6-2.8 1.9-1.8l2.3 2V7.3c0-1.5 2.3-1.5 2.3 0V14V5.8c0-1.5 2.3-1.5 2.3 0V14V6.8c0-1.5 2.3-1.5 2.3 0V14V9c0-1.5 2.2-1.5 2.2 0v10.5c0 4-1.8 6.5-3.8 8.5z"/></svg></button>
+        <button class="gear" data-gear="coat" aria-label="실험복 착용" title="실험복"><svg><use href="#ic-coat"/></svg></button>
+        <button class="gear" data-gear="goggles" aria-label="보안경 착용" title="보안경"><svg><use href="#ic-goggle"/></svg></button>
+        <button class="gear" data-gear="gloves" aria-label="실험용 장갑 착용" title="실험용 장갑"><svg><use href="#ic-glove"/></svg></button>
         <span class="sign" id="signElec" title="전기 주의" role="img" aria-label="전기 주의"><svg viewBox="0 0 32 32"><path d="M16 4 L29 27 H3 Z" fill="#f4c33b" stroke="#231f20" stroke-width="1.6" stroke-linejoin="round"/><path d="M17.5 11 L12.5 19.5 H16 L14.5 25 L20 16.5 H16.5 Z" fill="#231f20"/></svg></span>
-        <span class="sign" id="signWaste" title="폐수 처리" role="img" aria-label="폐수 처리"><svg viewBox="0 0 32 32"><g fill="none" stroke="#4d7ea5" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M10 10h12l-1.3 17h-9.4z"/><path d="M8 10h16M13.5 10V7h5v3"/><path d="M16 14.5c-1.9 2.7-2.8 4-2.8 5.4a2.8 2.8 0 0 0 5.6 0c0-1.4-.9-2.7-2.8-5.4z"/></g></svg></span>
+        <span class="sign" id="signWaste" title="폐수 처리" role="img" aria-label="폐수 처리"><svg viewBox="0 0 32 32"><g fill="none" stroke="var(--safety)" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M10 10h12l-1.3 17h-9.4z"/><path d="M8 10h16M13.5 10V7h5v3"/><path d="M16 14.5c-1.9 2.7-2.8 4-2.8 5.4a2.8 2.8 0 0 0 5.6 0c0-1.4-.9-2.7-2.8-5.4z"/></g></svg></span>
       </div>
     </aside>
 
@@ -213,26 +295,30 @@ aside h3{font-size:16px;margin:0 0 8px;font-weight:800}
           <g id="Llabel"></g>
           <g id="Lshelf"></g>
           <g id="Ldrag"></g>
+          <g id="Lgear">
+            <g class="gear-item" data-sgear="coat" transform="translate(330 300)" role="button" aria-label="실험복 착용"><circle r="64" class="gear-bg"/><use href="#ic-coat" x="-40" y="-40" width="80" height="80" class="gear-ic"/><text y="100" text-anchor="middle" class="gear-lbl">실험복</text></g>
+            <g class="gear-item" data-sgear="goggles" transform="translate(500 300)" role="button" aria-label="보안경 착용"><circle r="64" class="gear-bg"/><use href="#ic-goggle" x="-40" y="-40" width="80" height="80" class="gear-ic"/><text y="100" text-anchor="middle" class="gear-lbl">보안경</text></g>
+            <g class="gear-item" data-sgear="gloves" transform="translate(670 300)" role="button" aria-label="실험용 장갑 착용"><circle r="64" class="gear-bg"/><use href="#ic-glove" x="-40" y="-40" width="80" height="80" class="gear-ic"/><text y="100" text-anchor="middle" class="gear-lbl">실험용 장갑</text></g>
+          </g>
         </svg>
         <div class="tools">
+          <button class="btn" id="sheetBtn" hidden>결과 및 정리</button>
           <button class="btn" id="zoomBtn">확대해서 보기</button>
-          <button class="btn" id="sheetBtn">정리</button>
         </div>
         <button class="btn reset" id="resetBtn">처음부터</button>
         <div class="toast" id="toast" role="status" aria-live="polite"></div>
         <div class="sheet" id="sheet" aria-hidden="true">
-          <div class="sheet-head"><span class="tag result">정리</span><button class="btn" id="sheetClose">닫기</button></div>
+          <div class="sheet-head"><span class="tag mint">결과 및 정리</span><span class="snote">답은 교과서에 기록하자.</span><button class="btn" id="sheetClose">장치 다시 보기</button></div>
           <ol class="qs">
             <li><span class="qn">1</span><p>전극 주변의 색이 변화하는가? 그 까닭을 설명해 보자.</p></li>
             <li><span class="qn">2</span><p>(+)극과 (−)극에서 발생한 기체를 각각 써 보자.</p></li>
             <li><span class="qn">3</span><p>(+)극과 (−)극에서 발생한 기체의 부피비를 써 보자.</p></li>
           </ol>
-          <p class="note">답은 교과서에 기록하자.</p>
         </div>
       </div>
 
       <section class="panel">
-        <div class="ptop"><span class="tag prep" id="tag">준비</span><span class="count" id="count">1 / 12</span></div>
+        <div class="ptop"><span class="tag gray" id="tag">준비</span><span class="count" id="count">1 / 12</span></div>
         <button class="btn next" id="next">다음 단계</button>
         <div class="stepline"><span class="stepnum" id="num">1</span><p class="steptext" id="stext"></p></div>
         <p class="hint" id="hint"></p>
@@ -252,14 +338,14 @@ const CFG = {
   gasRatio: 0.5,      // (+)극 기체 부피 ÷ (−)극 기체 부피 (교과서 기준 1 : 2 → 0.5)
   bubbleRate: 9,      // (−)극에서 1초에 생기는 기포 수 ((+)극은 이 값 × gasRatio)
   colorTime: 10,      // 전극 주변 BTB 색이 뚜렷해지기까지 걸리는 시간(초)
-  watchNeed: 3,       // 관찰 단계: [확대해서 보기]로 보고 있어야 하는 시간(초)
-  snap: 60            // 점선 자리에 딱 붙는 거리(SVG 좌표 단위)
+  zoomNeed: 3,        // 관찰 단계: [확대해서 보기]로 보고 있어야 하는 시간(초)
+  snapDist: 60        // 점선 자리에 딱 붙는 거리(SVG 좌표 단위)
 };
 
 const FRAC = '<span class="frac"><span>1</span><span>3</span></span>';
 const STEPS = [
-  {tag:'준비', cls:'prep', text:'실험복, 보안경, 실험용 장갑을 착용한다.', hint:'왼쪽의 실험복·보안경·장갑 아이콘을 하나씩 눌러 착용하자.', ok:'안전 장비를 모두 착용했다.'},
-  {tag:'준비', cls:'prep', text:'준비물을 실험대로 옮긴다.', hint:'선반 위의 준비물을 하나씩 눌러 실험대로 옮기자.', ok:'준비물을 모두 옮겼다.'},
+  {tag:'준비', cls:'gray', text:'실험복, 보안경, 실험용 장갑을 착용한다.', hint:'실험대 위의 안전 장비를 하나씩 눌러 착용하자.', ok:'안전 장비를 모두 착용했다.'},
+  {tag:'준비', cls:'gray', text:'준비물을 실험대로 옮긴다.', hint:'선반 위의 준비물을 하나씩 눌러 실험대로 옮기자.', ok:'준비물을 모두 옮겼다.'},
   {tag:'과정 1', cls:'', text:'홈판에 플라스틱 병을 꽂는다.', hint:'플라스틱 병을 끌어서 홈판의 점선 자리에 놓자.', ok:'플라스틱 병을 홈판에 꽂았다.'},
   {tag:'과정 1', cls:'', text:'BTB 용액을 넣은 황산 나트륨 수용액을 '+FRAC+' 정도 넣는다.', hint:'시약병을 끌어 플라스틱 병 위에 대고 누르고 있으면 용액이 부어진다. 점선까지 부어 보자.', ok:'플라스틱 병에 용액을 '+FRAC+' 정도 넣었다.'},
   {tag:'과정 2', cls:'', text:'일회용 스포이트 2개의 아랫부분을 잘라 낸다.', hint:'가위를 끌어서 스포이트 끝의 점선에 대 보자.', ok:'스포이트 2개의 아랫부분을 잘라 냈다.'},
@@ -268,8 +354,8 @@ const STEPS = [
   {tag:'과정 3', cls:'', text:'스포이트의 아랫부분에 침핀을 찔러 넣는다.', hint:'침핀을 끌어서 스포이트 옆의 점선 동그라미에 놓자.', ok:'두 스포이트에 침핀을 찔러 넣었다.'},
   {tag:'과정 3', cls:'', text:'집게 달린 전선으로 9 V 건전지에 연결한다.', hint:'전선의 집게를 끌어서 침핀 머리에 물려 보자.', ok:'침핀을 9 V 건전지에 연결했다.'},
   {tag:'과정 3', cls:'', text:'일어나는 변화를 관찰한다.', hint:'[확대해서 보기]를 눌러 두 스포이트의 색과 모이는 기체의 양을 비교해 보자.', ok:'두 전극 주변의 변화를 관찰했다.'},
-  {tag:'정리', cls:'result', text:'실험 결과를 정리한다.', hint:'정리 발문을 읽고, 답은 교과서에 기록하자.', ok:'정리 발문을 확인했다.'},
-  {tag:'뒷정리', cls:'prep', text:'실험 후 남은 용액은 폐수처리 기준과 방법에 따라 처리한다.', hint:'폐수통을 눌러 남은 용액을 처리하자.', ok:'뒷정리를 마쳤다.'}
+  {tag:'결과 및 정리', cls:'mint', text:'실험 결과를 정리한다.', hint:'결과 및 정리 발문을 읽고, 답은 교과서에 기록하자.', ok:''},
+  {tag:'뒷정리', cls:'gray', text:'실험 후 남은 용액은 폐수 처리 기준과 방법에 따라 처리한다.', hint:'폐수통을 눌러 남은 용액을 처리하자.', ok:'뒷정리를 마쳤다.'}
 ];
 const N = STEPS.length;
 
@@ -508,7 +594,7 @@ const DR = {
     move(p){ drag.o={x:p.x,y:p.y+85}; setT(G.bottle,drag.o.x,drag.o.y); },
     end(){
       const o=drag.o;
-      if(o && dist(o,{x:510,y:530})<CFG.snap+25){ S.bottle.placed=true; setT(G.bottle,510,530); complete(); }
+      if(o && dist(o,{x:510,y:530})<CFG.snapDist+25){ S.bottle.placed=true; setT(G.bottle,510,530); complete(); }
       else setT(G.bottle,...HOME.bottle);
     }
   },
@@ -526,7 +612,7 @@ const DR = {
     move(p){ drag.o={x:p.x,y:p.y+40}; setT(G.scissors,drag.o.x,drag.o.y,0); },
     end(){
       const o=drag.o; let hit=-1, bd=1e9;
-      if(o) [0,1].forEach(i=>{ if(!S.pip[i].cut){ const d=dist(o,LYING[i]); if(d<CFG.snap && d<bd){ bd=d; hit=i; } } });
+      if(o) [0,1].forEach(i=>{ if(!S.pip[i].cut){ const d=dist(o,LYING[i]); if(d<CFG.snapDist && d<bd){ bd=d; hit=i; } } });
       if(hit>=0) cutPip(hit);
       setT(G.scissors,...HOME.scissors);
     }
@@ -536,7 +622,7 @@ const DR = {
     move(p,i){ drag.o={x:p.x,y:p.y+150}; setT(G.pip[i],drag.o.x,drag.o.y,0,1); },
     end(i){
       const o=drag.o; let s=-1, bd=1e9;
-      if(o) [0,1].forEach(k=>{ if(S.slotPip[k]<0){ const d=dist(o,SLOT[k]); if(d<CFG.snap+30 && d<bd){ bd=d; s=k; } } });
+      if(o) [0,1].forEach(k=>{ if(S.slotPip[k]<0){ const d=dist(o,SLOT[k]); if(d<CFG.snapDist+30 && d<bd){ bd=d; s=k; } } });
       if(s>=0){ S.pip[i].state='in'; S.pip[i].slot=s; S.slotPip[s]=i; G.pinT[i].innerHTML=pinTargetM(SLOT[s].side); }
       else S.pip[i].state='stand';
       placePip(i);
@@ -547,7 +633,7 @@ const DR = {
     move(p,i){ drag.o=p; setT(G.pins[i],p.x,p.y,p.x<510?0:180); },
     end(i){
       const p=drag.o; let s=-1, bd=1e9;
-      if(p) [0,1].forEach(k=>{ if(S.slotPip[k]>=0 && !S.slotPin[k]){ const d=dist(p,headPos(k)); if(d<CFG.snap && d<bd){ bd=d; s=k; } } });
+      if(p) [0,1].forEach(k=>{ if(S.slotPip[k]>=0 && !S.slotPin[k]){ const d=dist(p,headPos(k)); if(d<CFG.snapDist && d<bd){ bd=d; s=k; } } });
       if(s>=0){
         S.slotPin[s]=true; S.pins[i].slot=s;
         $('#pinA'+S.slotPip[s]).innerHTML=pinM(SLOT[s].side);
@@ -559,7 +645,7 @@ const DR = {
     move(p,c){ const rot=p.x<510?0:180; drag.o=p; S.clipPose[c]={x:p.x,y:p.y,rot}; setT(G.clip[c],p.x,p.y,rot); },
     end(c){
       const p=drag.o; let s=-1, bd=1e9;
-      if(p) [0,1].forEach(k=>{ if(S.slotPin[k] && S.clips.red!==k && S.clips.black!==k){ const d=dist(p,headPos(k)); if(d<CFG.snap && d<bd){ bd=d; s=k; } } });
+      if(p) [0,1].forEach(k=>{ if(S.slotPin[k] && S.clips.red!==k && S.clips.black!==k){ const d=dist(p,headPos(k)); if(d<CFG.snapDist && d<bd){ bd=d; s=k; } } });
       if(s>=0){
         const h=headPos(s), rot=s===0?0:180;
         S.clips[c]=s; S.clipPose[c]={x:h.x,y:h.y,rot};
@@ -638,6 +724,9 @@ svg.addEventListener('click', e => {
   }
 });
 
+$('#Lgear').addEventListener('click', e => {
+  const g=e.target.closest('[data-sgear]'); if(g) $(`.gear[data-gear="${g.dataset.sgear}"]`).click();
+});
 $$('.gear').forEach(b => b.addEventListener('click', () => {
   const k=b.dataset.gear;
   if(S.step!==0){ return; }
@@ -663,7 +752,7 @@ function toast(html){
 }
 function complete(){
   if(S.done) return;
-  S.done=true; toast(STEPS[S.step].ok);
+  S.done=true; if(STEPS[S.step].ok) toast(STEPS[S.step].ok);
   const b=$('#next'); b.classList.remove('ready'); void b.offsetWidth; b.classList.add('ready');
   updatePanel(); renderUI();
 }
@@ -673,17 +762,26 @@ function enterStep(){
 }
 function updatePanel(){
   const st=STEPS[S.step], last=S.step===N-1;
-  const tag=$('#tag');
-  if(last && S.done){ tag.textContent='완료'; tag.className='tag result'; }
-  else { tag.textContent=st.tag; tag.className='tag'+(st.cls?' '+st.cls:''); }
+  const tag=$('#tag'), b=$('#next');
+  $('#sheetBtn').hidden = S.step<10;
+  $('#zoomBtn').disabled = S.step<2;
+  if(S.finished){
+    tag.textContent='완료'; tag.className='tag mint';
+    $('#count').textContent=''; $('#num').textContent='';
+    $('#stext').textContent='물을 전기 분해 하기 실험을 마쳤다.';
+    $('#hint').textContent='결과 및 정리를 모두 기록했는지 확인하자.';
+    b.textContent='처음부터 다시';
+    $('#barFill').style.width='100%'; $('#barDot').style.left='100%';
+    return;
+  }
+  tag.textContent=st.tag; tag.className='tag'+(st.cls?' '+st.cls:'');
   $('#count').textContent=`${S.step+1} / ${N}`;
   $('#num').textContent=S.step+1;
   $('#stext').innerHTML=st.text;
   $('#hint').innerHTML=st.hint;
-  const b=$('#next');
-  b.textContent = (last && S.done) ? '처음부터 다시' : '다음 단계';
+  b.textContent = last ? '실험 끝' : '다음 단계';
   if(!S.done) b.classList.remove('ready');
-  const pct = (S.step + (S.done?1:0)) / N * 100;
+  const pct = S.step / N * 100;
   $('#barFill').style.width=pct+'%'; $('#barDot').style.left=pct+'%';
 }
 function renderUI(){
@@ -693,8 +791,9 @@ function renderUI(){
   $('#signWaste').classList.toggle('pulse', S.step===11 && !S.done);
 }
 $('#next').addEventListener('click', () => {
+  if(S.finished){ reset(); return; }
   if(!S.done){ toast('이 단계를 먼저 마치자.'); return; }
-  if(S.step===N-1){ reset(); return; }
+  if(S.step===N-1){ S.finished=true; updatePanel(); return; }
   S.step++; S.done=false;
   enterStep(); updatePanel(); renderUI();
 });
@@ -708,7 +807,7 @@ $('#sheetClose').addEventListener('click', () => openSheet(false));
 
 function setZoom(on){
   S.zoom=on; S.vbT = on ? VB_ZOOM.slice() : VB_FULL.slice();
-  const b=$('#zoomBtn'); b.textContent = on ? '원래대로 보기' : '확대해서 보기'; b.classList.toggle('on',on);
+  const b=$('#zoomBtn'); b.textContent = on ? '전체 보기' : '확대해서 보기'; b.classList.toggle('on',on);
 }
 $('#zoomBtn').addEventListener('click', () => setZoom(!S.zoom));
 
@@ -757,7 +856,9 @@ function render(){
     const low = P.x<700; G.wire[c].setAttribute('d', low ? `M${R.x},${R.y} C${R.x+dir*50},${R.y+230} ${T.x-150},${T.y-40} ${T.x},${T.y}` : `M${R.x},${R.y} C${R.x+dir*60},${R.y+70} ${T.x+(c==='red'?-30:30)},${T.y-90} ${T.x},${T.y}`);
     G.wire[c].style.opacity = (M.wire && M.battery) ? 1 : 0;
   });
-  const sh=$('#Lshelf'); sh.style.opacity = st<=1 ? 1 : 0; sh.style.pointerEvents = st<=1 ? '' : 'none';
+  const sh=$('#Lshelf'); sh.style.opacity = st===1 ? 1 : 0; sh.style.pointerEvents = st===1 ? '' : 'none';
+  const lg=$('#Lgear'); lg.style.display = st===0 ? '' : 'none';
+  $$('#Lgear [data-sgear]').forEach(g=>g.classList.toggle('gone', !!S.worn[g.dataset.sgear]));
 
   // 점선 자리
   setVis(G.ghostBottle, st===2 && !S.bottle.placed);
@@ -837,7 +938,7 @@ function loop(now){
 
   // 관찰
   if(S.step===9 && !S.done && S.zoom && S.running){
-    S.watch+=dt; if(S.watch>=CFG.watchNeed) complete();
+    S.watch+=dt; if(S.watch>=CFG.zoomNeed) complete();
   }
 
   // 확대
